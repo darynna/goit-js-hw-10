@@ -1,13 +1,17 @@
-import SlimSelect from 'slim-select'
+import SlimSelect from 'slim-select';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { fetchBreeds } from './cat-api.js'
 import {fetchCatByBreed} from './cat-api.js'
 const breadSelect = document.querySelector(".breed-select");
 const box = document.querySelector(".cat-info");
 const loaderText = document.querySelector(".loader")
+const errorText = document.querySelector(".error")
+
+const baseurl = 'https://api.thecatapi.com/v1'
 
 
 
-fetchBreeds().then((data) => {
+fetchBreeds(baseurl).then((data) => {
     data.map((bread) => {
         const option = document.createElement("option");
         option.value = bread.id;
@@ -20,7 +24,11 @@ fetchBreeds().then((data) => {
         select: document.querySelector('.breed-select')
       })
     
-})
+}).catch(error => {
+    errorText.classList.remove("ishidden")
+    Notify.failure('Oops! Something went wrong! Try reloading the page!');
+
+});
 
 
 breadSelect.addEventListener("change", onSelect) 
@@ -29,10 +37,13 @@ function onSelect(e){
     box.innerHTML = '';
     loaderText.classList.remove("ishidden")
     const bread = e.currentTarget.value;
-    fetchCatByBreed(bread).then((data) => {
-        const cat = data.breeds[0]
-        console.log(cat.description)
-        makeMarkup(data.url, cat.name, cat.name, cat.description, cat.temperament)
+    fetchCatByBreed(baseurl, bread).then((data) => {
+        const cat = data.breeds[0];
+        const {name, description, temperament} = cat;
+        makeMarkup(data.url, name, name, description, temperament)
+    }).catch((error) => {
+        errorText.classList.remove("ishidden")
+        Notify.failure('Oops! Something went wrong! Try reloading the page!');
     })
 
 };
